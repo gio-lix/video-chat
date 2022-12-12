@@ -1,26 +1,36 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, {useEffect} from 'react';
+import {Routes, Route} from "react-router-dom";
+import Home from "./pages/Home";
+import AuthLayout from "./layout/AuthLayout";
+import io from "socket.io-client"
+import {useAppDispatch} from "./redux/store";
+import SocketClient from "./util/SocketClient";
+import RoomId from "./pages/room/[slug]";
+import JoinRoom from "./pages/Login";
+import {socketActions} from "./redux/slices/socketSlice";
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    const dispatch = useAppDispatch()
+
+    useEffect(() => {
+        const socket = io("http://localhost:9001")
+        dispatch(socketActions.setSocket(socket))
+        return () => {socket.close()}
+    },[dispatch])
+
+
+    return (
+        <>
+            <SocketClient/>
+            <Routes>
+                <Route path="/login" element={<JoinRoom />}/>
+                <Route path="/" element={<AuthLayout/>}>
+                    <Route index path='/' element={<Home/>}/>
+                    <Route path="/room/:id" element={<RoomId />}/>
+                </Route>
+            </Routes>
+        </>
+    );
 }
 
 export default App;
